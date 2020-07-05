@@ -49,7 +49,7 @@ app.post('/SignUp', (req, res) => {
 app.post('/Login', (req, res) => {
     const id = req.body['ID']
     const pw = req.body['PW']
-    const token=req.body['Token']
+    const token = req.body['Token']
 
     sql.Login(id, pw, token, (rs) => {
         console.log(`${rs.ID} 로그인`)
@@ -109,8 +109,9 @@ app.post('/Create/Schedule', (req, res) => {
     const ServiceType = req.body['ServiceType']
     const Start = req.body['Start']
     const End = req.body['End']
+    const Price = req.body['Price']
 
-    sql.createSchedule(MemberID, ManagerID, petId, ServiceType, Start, End, (rs) => {
+    sql.createSchedule(MemberID, ManagerID, petId, ServiceType, Start, End, Price, (rs) => {
         if (rs) {
             res.json(ok)
         } else {
@@ -166,10 +167,26 @@ app.get('/Manager/Schedule', (req, res) => {
     })
 })
 
-app.get('/Pet', (req, res)=>{
-    const id=req.query.ID
+app.get('/Pet', (req, res) => {
+    const id = req.query.ID
     console.log(id)
-    sql.getPet(id, (rs)=>{
+    sql.getPet(id, (rs) => {
+        console.log(rs)
+        res.json(rs)
+    })
+})
+
+app.get('/Benefit', (req, res) => {
+    const id = req.query.ID
+    const date = new Date()
+    const year = date.getUTCFullYear()
+    var month = date.getMonth() + 1
+
+    if(month<10) {
+        month='0'+month
+    }
+
+    sql.getBenefit(id, year, month, (rs)=>{
         console.log(rs)
         res.json(rs)
     })

@@ -109,8 +109,8 @@ exports.getManagers = (Start = String, End = String, callback) => {
     })
 }
 
-exports.createSchedule = (MemberID = String, ManagerID = String, PetID = Number, ServiceType = Number, Start = String, End = String, callback) => {
-    const query = `insert into Schedule set MemberID='${MemberID}', ManagerID='${ManagerID}', PetID=${PetID}, ServiceType=${ServiceType}, Start='${Start}', End='${End}'`
+exports.createSchedule = (MemberID = String, ManagerID = String, PetID = Number, ServiceType = Number, Start = String, End = String,Price=Number, callback) => {
+    const query = `insert into Schedule set MemberID='${MemberID}', ManagerID='${ManagerID}', PetID=${PetID}, ServiceType=${ServiceType}, Start='${Start}', End='${End}', Price=${Price}`
     const tokenQuery=`select Token from Members where ID='${ManagerID}'`
     connection.query(query, (e0, rs) => {
         if (e0) {
@@ -141,7 +141,7 @@ exports.getSchedule = (MemberID = String, Limit = Number, callback) => {
      date_format(Start, '%H시 %i분') Time
      from Schedule where MemberID='${MemberID}') S left outer join Members M
      on S.ManagerID=M.ID) SS left outer join Pet PT
-     on SS.PetID=PT.ID order by Date limit ${Limit}`
+     on SS.PetID=PT.ID order by Date desc limit ${Limit}`
 
     connection.query(query, (e0, rs) => {
         if (e0) {
@@ -268,7 +268,7 @@ exports.getMySchedule = (id = String, callback) => {
         P.Name PetName from 
         Schedule S left outer join Pet P on S.PetID=P.ID 
         where ManagerID='${id}') SC left outer join Members MM
-        on SC.MemberID=MM.ID`
+        on SC.MemberID=MM.ID order by ID desc` 
 
     connection.query(query, (e0, rs) => {
         if (e0) {
@@ -288,6 +288,42 @@ exports.getPet = (id = Number, callback) => {
             callback(null)
         } else {
             callback(rs[0])
+        }
+    })
+}
+
+exports.getBenefit=(ID=String, Year, Month, callback)=>{
+    const query=`select if(ServiceType=0, '돌봄', '산책') Service ,sum(Price) Price, count(Price) Cnt  
+    from Schedule where ManagerID='${ID}' and date_format(Start, '%Y-%m')='${Year}-${Month}'
+    group by ServiceType`
+    const totalQuery=`select if(ServiceType=0, '돌봄', '산책') Service ,sum(Price) Price, count(Price) Cnt  
+    from Schedule where ManagerID='${ID}'
+    group by ServiceType`
+
+    var result={
+        Month:[],
+        Total:[]
+    }
+
+    connection.query(query, (e0, rs0)=>{
+        if(e0) {
+            console.error(e0)
+            callback(null)
+        } else {
+            for(var i=0; i<rs0.length; i++) {
+                result.Month.push(rs0[i])
+            }
+            connection.query(totalQuery, (e1, rs1)=>{
+                if(e1) {
+                    console.error(e1)
+                    callback(null)
+                } else {
+                    for(var i=0; i<rs1.length; i++) {
+                        result.Total.push(rs1[i])
+                    }
+                    callback(result)
+                }
+            })
         }
     })
 }
